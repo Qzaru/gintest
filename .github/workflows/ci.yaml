@@ -260,12 +260,14 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1  
     
       - name: Build Server Docker Image
-        working-directory: ./server/
+        working-directory: ./server
         run: |
+          ls -l
           docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
       - name: Build Web Docker Image
-        working-directory: ./web/
+        working-directory: ./web
         run: |
+          ls -l
           docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
 
       # 新增：推送到ECR
