@@ -250,10 +250,13 @@ jobs:
     steps:
       - name: Check out branch
         uses: actions/checkout@v2
+      - name: Show AWS_REGION secret
+        run: echo "AWS_REGION is ${{ secrets.AWS_REGION }}"
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           aws-region: ${{ secrets.AWS_REGION }}
+          
           # 如果版本支持参数，不需要手动传凭证
           
       # 新增：构建镜像
