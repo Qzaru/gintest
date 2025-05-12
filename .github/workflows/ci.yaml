@@ -254,11 +254,17 @@ jobs:
           # 如果版本支持参数，不需要手动传凭证
           
       # 新增：构建镜像
-      - name: Build Docker Image
+      - name: Build Server Docker Image
         run: |
-          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_SERVER_REPO_URI }}:${{ github.sha }} ./server
+      - name: Build Web Docker Image
+        run: |
+          docker build -t ${{ secrets.ECR_WEB_REPO_URI }}:${{ github.sha }} ./web
 
       # 新增：推送到ECR
-      - name: Push to ECR
+      - name: Push Server to ECR
         run: |
-          docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_SERVER_REPO_URI }}:${{ github.sha }}
+      - name: Push Web to ECR
+        run: |
+          docker push ${{ secrets.ECR_WEB_REPO_URI }}:${{ github.sha }}
