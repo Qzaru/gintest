@@ -21,7 +21,8 @@ jobs:
         run: |
           echo "flipped-aurora"
   frontend:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
+    if: github.ref == 'refs/heads/stop-stop-stop'
+  #  if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
     name: Frontend node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -43,7 +44,8 @@ jobs:
         working-directory: ./web
 
   backend:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
+    if: github.ref == 'refs/heads/stop-stop-stop'
+   # if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
     name: Backend go
     runs-on: ubuntu-latest
     strategy:
@@ -74,7 +76,8 @@ jobs:
         working-directory: ./server
 
   devops-test:
-    if: github.ref == 'refs/heads/test'
+    if: github.ref == 'refs/heads/stop-stop-stop'
+  #  if: github.ref == 'refs/heads/test'
     name: devops-test
     needs: 
       - init
@@ -238,12 +241,12 @@ jobs:
           ssh -p ${PROT} -o StrictHostKeyChecking=no ${USER}@${HOST} "cd ${MKDIR} && bash restart.sh > /dev/null  2>&1 &"
 
   docker:
-    name: docker
     if: github.event_name == 'push'
+    name: docker
     runs-on: ubuntu-latest
-    needs:
-      - init
-      - release-please
+  #  needs:
+   #   - init
+    #  - release-please
     steps:
       - name: Check out branch
         uses: actions/checkout@v2
