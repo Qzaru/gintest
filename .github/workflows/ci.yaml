@@ -261,15 +261,15 @@ jobs:
     
       - name: Build Server Docker Image
         run: |
-          docker build -t ${{ secrets.ECR_SERVER_REPO_URI }}:${{ github.sha }} ./server
+          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} ./server
       - name: Build Web Docker Image
         run: |
-          docker build -t ${{ secrets.ECR_WEB_REPO_URI }}:${{ github.sha }} ./web
+          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} ./web
 
       # 新增：推送到ECR
       - name: Push Server to ECR
         run: |
-          docker push ${{ secrets.ECR_SERVER_REPO_URI }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-server
       - name: Push Web to ECR
         run: |
-          docker push ${{ secrets.ECR_WEB_REPO_URI }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web
