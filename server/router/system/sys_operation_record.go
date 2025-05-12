@@ -14,6 +14,8 @@ func (s *OperationRecordRouter) InitSysOperationRecordRouter(Router *gin.RouterG
 		operationRecordRouter.DELETE("deleteSysOperationRecordByIds", operationRecordApi.DeleteSysOperationRecordByIds) // 批量删除SysOperationRecord
 		operationRecordRouter.GET("findSysOperationRecord", operationRecordApi.FindSysOperationRecord)                  // 根据ID获取SysOperationRecord
 		operationRecordRouter.GET("getSysOperationRecordList", operationRecordApi.GetSysOperationRecordList)            // 获取SysOperationRecord列表
+		operationRecordRouter.GET("getSysOperationRecordLoginById", operationRecordApi.GetSysOperationRecordLoginById)  // 获取SysOperationRecord列表
+		operationRecordRouter.DELETE("deleteLoginRecordById", operationRecordApi.DeleteLoginRecordById)                 // 获取SysOperationRecord列表
 
 	}
 }

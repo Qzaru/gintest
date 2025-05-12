@@ -43,6 +43,16 @@ func OperationRecord() gin.HandlerFunc {
 			} else {
 				c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 			}
+			// } else if c.Request.Method == http.MethodPost { //新加的，记录post请求的信息
+			// 	// 记录 POST 请求特定的信息
+			// 	var err error
+			// 	body, err = io.ReadAll(c.Request.Body)
+			// 	if err != nil {
+			// 		global.GVA_LOG.Error("read body from request error:", zap.Error(err))
+			// 	} else {
+			// 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+			// 	} //以上新加
+
 		} else {
 			query := c.Request.URL.RawQuery
 			query, _ = url.QueryUnescape(query)

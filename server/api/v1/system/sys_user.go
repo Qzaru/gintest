@@ -67,6 +67,22 @@ func (b *BaseApi) Login(c *gin.Context) {
 			return
 		}
 		b.TokenNext(c, *user)
+
+		// loginTime := time.Now()
+		// userlogin := system.UserLogin{
+		// 	UserID:    int(user.ID),
+		// 	LoginTime: loginTime,
+		// }
+
+		if err := global.GVA_DB.Create(&system.UserLogin{
+			UserID:    int(user.ID),
+			LoginTime: time.Now(),
+		}).Error; err != nil {
+			global.GVA_LOG.Error("写入登录记录失败!", zap.Error(err))
+			response.FailWithMessage("写入登录记录失败", c)
+			return
+		}
+
 		return
 	}
 	// 验证码次数+1
@@ -124,7 +140,9 @@ func (b *BaseApi) TokenNext(c *gin.Context, user system.SysUser) {
 			Token:     token,
 			ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
 		}, "登录成功", c)
+
 	}
+
 }
 
 // Register

@@ -68,3 +68,13 @@ type GetUserList struct {
 	Phone    string `json:"phone" form:"phone"`
 	Email    string `json:"email" form:"email"`
 }
+
+// 新加的，收藏功能用(被用于各种api的数据绑定)
+type UserFavorites struct {
+	UserID   uint   `json:"userID" form:"userID"`
+	SkuId    string `json:"sku_id" form:"sku_id"`
+	Page     int    `json:"page" form:"page"`
+	Limit    int    `json:"limit" form:"limit"`
+	Sort     int    `json:"sort" form:"sort"`
+	Quantity int    `json:"quantity" form:"quantity"`
+}

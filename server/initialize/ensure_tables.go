@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"context"
+
 	adapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
 	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
@@ -44,6 +45,7 @@ func (e *ensureTables) MigrateTable(ctx context.Context) (context.Context, error
 		sysModel.SysDictionary{},
 		sysModel.SysAutoCodeHistory{},
 		sysModel.SysOperationRecord{},
+		sysModel.SysOperationRecordLogin{}, //新加的
 		sysModel.SysDictionaryDetail{},
 		sysModel.SysBaseMenuParameter{},
 		sysModel.SysBaseMenuBtn{},
@@ -86,6 +88,7 @@ func (e *ensureTables) TableCreated(ctx context.Context) bool {
 		sysModel.SysDictionary{},
 		sysModel.SysAutoCodeHistory{},
 		sysModel.SysOperationRecord{},
+		sysModel.SysOperationRecordLogin{},
 		sysModel.SysDictionaryDetail{},
 		sysModel.SysBaseMenuParameter{},
 		sysModel.SysBaseMenuBtn{},

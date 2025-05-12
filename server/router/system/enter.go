@@ -19,6 +19,7 @@ type RouterGroup struct {
 	AuthorityBtnRouter
 	SysExportTemplateRouter
 	SysParamsRouter
+	ProductsRouter
 }
 
 var (
@@ -37,6 +38,7 @@ var (
 	autoCodePluginApi   = api.ApiGroupApp.SystemApiGroup.AutoCodePluginApi
 	autocodeHistoryApi  = api.ApiGroupApp.SystemApiGroup.AutoCodeHistoryApi
 	operationRecordApi  = api.ApiGroupApp.SystemApiGroup.OperationRecordApi
+	productsApi         = api.ApiGroupApp.SystemApiGroup.ProductsApi
 	autoCodePackageApi  = api.ApiGroupApp.SystemApiGroup.AutoCodePackageApi
 	dictionaryDetailApi = api.ApiGroupApp.SystemApiGroup.DictionaryDetailApi
 	autoCodeTemplateApi = api.ApiGroupApp.SystemApiGroup.AutoCodeTemplateApi

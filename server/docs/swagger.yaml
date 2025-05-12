@@ -1436,6 +1436,13 @@ definitions:
       user:
         $ref: '#/definitions/system.SysUser'
     type: object
+  system.ApplyCouponRequest:
+    properties:
+      coupon_code:
+        type: string
+    required:
+    - coupon_code
+    type: object
   system.Condition:
     properties:
       ID:
@@ -1495,6 +1502,42 @@ definitions:
       title:
         description: 菜单名
         type: string
+      transitionType:
+        description: 路由切换动画
+        type: string
+    type: object
+  system.ShippingAddressInput:
+    properties:
+      address_line1:
+        maxLength: 255
+        type: string
+      address_line2:
+        maxLength: 255
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      is_default:
+        type: boolean
+      phone_number:
+        maxLength: 20
+        type: string
+      postal_code:
+        maxLength: 10
+        type: string
+      prefecture:
+        maxLength: 50
+        type: string
+      recipient_name:
+        maxLength: 100
+        type: string
+    required:
+    - address_line1
+    - city
+    - phone_number
+    - postal_code
+    - prefecture
+    - recipient_name
     type: object
   system.SysApi:
     properties:
@@ -1900,6 +1943,8 @@ definitions:
       headerImg:
         description: 用户头像
         type: string
+      nationality:
+        type: string
       nickName:
         description: 用户昵称
         type: string
@@ -1909,6 +1954,8 @@ definitions:
         description: 配置
       phone:
         description: 用户手机号
+        type: string
+      sex:
         type: string
       updatedAt:
         description: 更新时间
@@ -1925,11 +1972,27 @@ definitions:
       config:
         $ref: '#/definitions/config.Server'
     type: object
+  system.UsePointsRequest:
+    properties:
+      points_to_use:
+        minimum: 1
+        type: integer
+    required:
+    - points_to_use
+    type: object
+  system.UserCartItemsQuantityRes:
+    properties:
+      quantity:
+        description: |-
+          UserId    uint
+          SkuId     string
+        type: integer
+    type: object
 info:
   contact: {}
   description: 使用gin+vue进行极速开发的全栈开发基础平台
   title: Gin-Vue-Admin Swagger API接口文档
-  version: v2.7.9-beta
+  version: v2.8.1
 paths:
   /api/createApi:
     post:
@@ -2227,6 +2290,804 @@ paths:
       summary: 修改基础api
       tags:
       - SysApi
+  /api/v1/payments/methods:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看支付方式
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看支付方式
+      tags:
+      - Products
+  /api/v1/products/{product_code}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品code
+        in: path
+        name: product_code
+        required: true
+        type: string
+      - description: 商品skuid
+        in: query
+        name: skuid
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看商品基础信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看商品基础信息
+      tags:
+      - Products
+  /api/v1/products/{product_code}/coordinates:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品code
+        in: path
+        name: product_code
+        required: true
+        type: string
+      - default: 6
+        description: 每页显示几条，默认6
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取关联商品搭配
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取商品关联搭配
+      tags:
+      - Products
+  /api/v1/products/{product_code}/qa:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品code
+        in: path
+        name: product_code
+        required: true
+        type: string
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序1.最新开始 2.最早开始 3.点赞数从高到低，默认1
+        in: query
+        name: sort
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看商品QA信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看商品Q&A信息
+      tags:
+      - Products
+  /api/v1/products/{product_code}/related:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品code
+        in: path
+        name: product_code
+        required: true
+        type: string
+      - default: 6
+        description: 每页显示几条，默认6
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取关联商品
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取商品关联商品
+      tags:
+      - Products
+  /api/v1/products/{product_code}/reviews:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品code
+        in: path
+        name: product_code
+        required: true
+        type: string
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序1.最新开始 2.最早开始 3.评价从高到低 4.评价从低到高 5.点赞数从高到低，默认1
+        in: query
+        name: sort
+        type: integer
+      - description: 只看几星评价
+        in: query
+        name: rating
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看商品评论信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看商品评论信息
+      tags:
+      - Products
+  /api/v1/products/images/{sku_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 商品skuid
+        in: path
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看商品图片信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看商品图片信息
+      tags:
+      - Products
+  /api/v2/cart:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看购物车
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看购物车
+      tags:
+      - Products
+  /api/v2/cart/items:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 添加的商品
+        in: query
+        name: sku_id
+        required: true
+        type: string
+      - default: 1
+        description: 添加数量，默认且至少为1
+        in: query
+        name: quantity
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在购物车添加商品
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在购物车添加商品
+      tags:
+      - Products
+  /api/v2/cart/items/{sku_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除购物车商品
+        in: path
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除购物车商品
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 删除购物车商品
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 被修改数量的商品
+        in: path
+        name: sku_id
+        required: true
+        type: string
+      - description: 填数量即可
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.UserCartItemsQuantityRes'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新购物车商品数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.UserCartItemsQuantityRes'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 更新购物车商品数量
+      tags:
+      - Products
+  /api/v2/favorites/skus:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序1.最新开始 2.最早开始 默认1
+        in: query
+        name: sort
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看商品收藏信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看商品收藏信息
+      tags:
+      - Products
+  /api/v2/favorites/skus/{sku_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 被取消收藏的商品sku
+        in: query
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除商品收藏信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 取消商品收藏
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 准备收藏的商品sku
+        in: query
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 进行商品收藏
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 设置商品收藏信息
+      tags:
+      - Products
+  /api/v2/history/viewed-skus:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取商品查看记录
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取商品查看记录
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 浏览的商品
+        in: query
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 进行商品收藏
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 添加商品浏览记录
+      tags:
+      - Products
+  /api/v2/orders/checkout/apply-coupon:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 在订单中取消使用优惠券
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ApplyCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在订单中取消使用优惠券
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在订单中取消使用优惠券
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 在订单中使用优惠券
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ApplyCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在订单中使用优惠券
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在订单中使用优惠券
+      tags:
+      - Products
+  /api/v2/orders/checkout/info:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取订单信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取订单信息
+      tags:
+      - Products
+  /api/v2/orders/checkout/use-points:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 在订单中取消使用积分
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ApplyCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在订单中取消使用积分
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在订单中取消使用积分
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 在订单中使用积分
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.UsePointsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在订单中使用积分
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在订单中使用积分
+      tags:
+      - Products
+  /api/v2/shipping-addresses:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查看配送地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 查看配送地址
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 添加新的配送地址
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ShippingAddressInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 添加新的配送地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 添加配送地址
+      tags:
+      - Products
+  /api/v2/shipping-addresses/{address_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除配送地址
+        in: path
+        name: address_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除配送地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 删除配送地址
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 被更新的配送地址id
+        in: path
+        name: address_id
+        required: true
+        type: string
+      - description: 更新配送地址
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ShippingAddressInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新配送地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ShippingAddressInput'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 更新配送地址
+      tags:
+      - Products
   /attachmentCategory/addCategory:
     post:
       consumes:
@@ -2935,8 +3796,7 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  items:
-                    type: object
+                  items: {}
                   type: array
                 msg:
                   type: string
@@ -4525,18 +5385,6 @@ paths:
       summary: 更新SysDictionaryDetail
       tags:
       - SysDictionaryDetail
-  /sysExportTemplate/ExportTemplate:
-    get:
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses: {}
-      security:
-      - ApiKeyAuth: []
-      summary: 导出表格模板
-      tags:
-      - SysExportTemplate
   /sysExportTemplate/createSysExportTemplate:
     post:
       consumes:
@@ -4618,6 +5466,42 @@ paths:
       summary: 导出表格
       tags:
       - SysExportTemplate
+  /sysExportTemplate/exportExcelByToken:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 导出表格
+      tags:
+      - ExportExcelByToken
+  /sysExportTemplate/exportTemplate:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 导出表格模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/exportTemplateByToken:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 通过token导出表格模板
+      tags:
+      - ExportTemplateByToken
   /sysExportTemplate/findSysExportTemplate:
     get:
       consumes:
@@ -4807,6 +5691,45 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 创建SysOperationRecord
+      tags:
+      - SysOperationRecord
+  /sysOperationRecord/deleteLoginRecordById:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户id
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: 起始时间
+        in: query
+        name: start_time
+        required: true
+        type: string
+      - description: 截止时间
+        in: query
+        name: end_time
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取UserLogin列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 删除某用户某一时间段内的登录记录
       tags:
       - SysOperationRecord
   /sysOperationRecord/deleteSysOperationRecord:
@@ -5028,6 +5951,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 分页获取SysOperationRecord列表
+      tags:
+      - SysOperationRecord
+  /sysOperationRecord/getSysOperationRecordLoginById:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户id
+        in: query
+        name: user_id
+        type: integer
+      - description: 起始时间
+        in: query
+        name: start_time
+        type: string
+      - description: 截止时间
+        in: query
+        name: end_time
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取UserLogin列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 通过id查找登录时间
       tags:
       - SysOperationRecord
   /sysParams/createSysParams:

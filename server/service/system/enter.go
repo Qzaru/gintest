@@ -13,6 +13,7 @@ type ServiceGroup struct {
 	DictionaryService
 	SystemConfigService
 	OperationRecordService
+	ProductsService
 	DictionaryDetailService
 	AuthorityBtnService
 	SysExportTemplateService

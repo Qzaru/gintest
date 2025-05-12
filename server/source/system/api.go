@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+
 	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/pkg/errors"
@@ -144,8 +145,35 @@ func (i *initApi) InitializeData(ctx context.Context) (context.Context, error) {
 		{ApiGroup: "操作记录", Method: "POST", Path: "/sysOperationRecord/createSysOperationRecord", Description: "新增操作记录"},
 		{ApiGroup: "操作记录", Method: "GET", Path: "/sysOperationRecord/findSysOperationRecord", Description: "根据ID获取操作记录"},
 		{ApiGroup: "操作记录", Method: "GET", Path: "/sysOperationRecord/getSysOperationRecordList", Description: "获取操作记录列表"},
+		{ApiGroup: "操作记录", Method: "GET", Path: "/sysOperationRecord/getSysOperationRecordLoginById", Description: "获取对应用户登录记录列表"},
 		{ApiGroup: "操作记录", Method: "DELETE", Path: "/sysOperationRecord/deleteSysOperationRecord", Description: "删除操作记录"},
 		{ApiGroup: "操作记录", Method: "DELETE", Path: "/sysOperationRecord/deleteSysOperationRecordByIds", Description: "批量删除操作历史"},
+		{ApiGroup: "操作记录", Method: "DELETE", Path: "/sysOperationRecord/deleteLoginRecordById", Description: "删除某个用户某时间段的登录记录"},
+
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/products/:product_code", Description: "查看对应商品的基础信息"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/products/:product_code/reviews", Description: "查看对应商品的评论信息"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/products/:product_code/qa", Description: "查看对应商品的Q&A信息"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v2/favorites/skus", Description: "查看用户收藏的商品信息"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/favorites/skus/:sku_id", Description: "设置用户收藏的商品信息"},
+		{ApiGroup: "商品信息", Method: "DELETE", Path: "/api/v2/favorites/skus/:sku_id", Description: "删除用户收藏的商品信息"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/products/:product_code/related", Description: "查看关联商品"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/products/:product_code/coordinates", Description: "查看关联商品搭配"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v2/history/viewed-skus", Description: "查看商品浏览记录"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/history/viewed-skus", Description: "添加商品浏览记录"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v2/cart", Description: "浏览购物车"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/cart/items", Description: "在购物车内增加商品"},
+		{ApiGroup: "商品信息", Method: "PUT", Path: "/api/v2/cart/items/:sku_id", Description: "更新购物车内商品数量"},
+		{ApiGroup: "商品信息", Method: "DELETE", Path: "/api/v2/cart/items/:sku_id", Description: "删除购物车内商品"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v2/shipping-addresses", Description: "获取配送地址信息"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/shipping-addresses", Description: "添加配送地址"},
+		{ApiGroup: "商品信息", Method: "PUT", Path: "/api/v2/shipping-addresses/:address_id", Description: "更新配送地址"},
+		{ApiGroup: "商品信息", Method: "DELETE", Path: "/api/v2/shipping-addresses/:address_id", Description: "删除配送地址"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v1/payments/methods", Description: "获取支付方式"},
+		{ApiGroup: "商品信息", Method: "GET", Path: "/api/v2/orders/checkout/info", Description: "获取订单信息"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/orders/checkout/apply-coupon", Description: "使用优惠券"},
+		{ApiGroup: "商品信息", Method: "DELETE", Path: "/api/v2/orders/checkout/apply-coupon", Description: "撤销优惠券"},
+		{ApiGroup: "商品信息", Method: "POST", Path: "/api/v2/orders/checkout/use-points", Description: "使用积分"},
+		{ApiGroup: "商品信息", Method: "DELETE", Path: "/api/v2/orders/checkout/use-points", Description: "撤销积分"},
 
 		{ApiGroup: "断点续传(插件版)", Method: "POST", Path: "/simpleUploader/upload", Description: "插件版分片上传"},
 		{ApiGroup: "断点续传(插件版)", Method: "GET", Path: "/simpleUploader/checkFileMd5", Description: "文件完整度验证"},

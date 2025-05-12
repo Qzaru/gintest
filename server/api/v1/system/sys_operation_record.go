@@ -1,6 +1,8 @@
 package system
 
 import (
+	"strings"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
@@ -24,6 +26,8 @@ type OperationRecordApi struct{}
 // @Router    /sysOperationRecord/createSysOperationRecord [post]
 func (s *OperationRecordApi) CreateSysOperationRecord(c *gin.Context) {
 	var sysOperationRecord system.SysOperationRecord
+	//var sysOperationRecordLogin system.SysOperationRecordLogin
+	//var sourceRecords []system.SysOperationRecord
 	err := c.ShouldBindJSON(&sysOperationRecord)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -34,6 +38,29 @@ func (s *OperationRecordApi) CreateSysOperationRecord(c *gin.Context) {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败", c)
 		return
+	}
+	//新加的，同时添加到另一个SysOperationRecordLogin表中
+	if strings.Contains(sysOperationRecord.Resp, "登录成功") {
+		destRecord := system.SysOperationRecordLogin{
+			//Ip:           sysOperationRecord.Ip,
+			//Method:       sysOperationRecord.Method,
+			//Path:         sysOperationRecord.Path,
+			//Status:       sysOperationRecord.Status,
+			//Latency:      sysOperationRecord.Latency,
+			//Agent:        sysOperationRecord.Agent,
+			//ErrorMessage: sysOperationRecord.ErrorMessage,
+			//Body:         sysOperationRecord.Body,
+			//Resp:         sysOperationRecord.Resp,
+			UserID: sysOperationRecord.UserID,
+			//User:         sysOperationRecord.User,
+		}
+
+		// 插入到 SysOperationRecordLogin 表
+		if err := operationRecordService.CreateSysOperationRecordLogin(destRecord); err != nil {
+			global.GVA_LOG.Error("插入登录记录失败", zap.Error(err))
+			response.FailWithMessage("插入登录记录失败", c)
+			return
+		}
 	}
 	response.OkWithMessage("创建成功", c)
 }
@@ -146,4 +173,68 @@ func (s *OperationRecordApi) GetSysOperationRecordList(c *gin.Context) {
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
 	}, "获取成功", c)
+}
+
+// 新加的
+
+// GetSysOperationRecordLoginById
+// @Tags      SysOperationRecord
+// @Summary   通过id查找登录时间
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Param     user_id  query    int false  "用户id"
+// @Param     start_time  query  string false "起始时间"
+// @Param     end_time  query   string false "截止时间"
+// @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取UserLogin列表,返回包括列表,总数,页码,每页数量"
+// @Router    /sysOperationRecord/getSysOperationRecordLoginById [get]
+func (s *OperationRecordApi) GetSysOperationRecordLoginById(c *gin.Context) {
+	var pageInfo systemReq.UserLoginTimeSearch
+	err := c.ShouldBindQuery(&pageInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	list, total, err := operationRecordService.GetSysOperationRecordLoginById(pageInfo)
+	if err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
+}
+
+// 新加的
+
+// DeleteLoginRecordById
+// @Tags      SysOperationRecord
+// @Summary   删除某用户某一时间段内的登录记录
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Param     user_id  query    int true "用户id"
+// @Param     start_time  query  string true "起始时间"
+// @Param     end_time  query    string true "截止时间"
+// @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取UserLogin列表,返回包括列表,总数,页码,每页数量"
+// @Router    /sysOperationRecord/deleteLoginRecordById [delete]
+func (s *OperationRecordApi) DeleteLoginRecordById(c *gin.Context) {
+	var info systemReq.UserLoginTimeSearch
+	err := c.ShouldBindQuery(&info)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	err = operationRecordService.DeleteLoginRecordById(info)
+	if err != nil {
+		global.GVA_LOG.Error("删除失败!", zap.Error(err))
+		response.FailWithMessage("删除失败", c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
 }

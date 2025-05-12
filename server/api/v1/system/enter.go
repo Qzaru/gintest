@@ -14,6 +14,7 @@ type ApiGroup struct {
 	DictionaryApi
 	AuthorityMenuApi
 	OperationRecordApi
+	ProductsApi
 	DictionaryDetailApi
 	AuthorityBtnApi
 	SysExportTemplateApi
@@ -38,6 +39,7 @@ var (
 	systemConfigService     = service.ServiceGroupApp.SystemServiceGroup.SystemConfigService
 	sysParamsService        = service.ServiceGroupApp.SystemServiceGroup.SysParamsService
 	operationRecordService  = service.ServiceGroupApp.SystemServiceGroup.OperationRecordService
+	productsService         = service.ServiceGroupApp.SystemServiceGroup.ProductsService
 	dictionaryDetailService = service.ServiceGroupApp.SystemServiceGroup.DictionaryDetailService
 	autoCodeService         = service.ServiceGroupApp.SystemServiceGroup.AutoCodeService
 	autoCodePluginService   = service.ServiceGroupApp.SystemServiceGroup.AutoCodePlugin
