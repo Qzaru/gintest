@@ -247,23 +247,18 @@ jobs:
     steps:
       - name: Check out branch
         uses: actions/checkout@v2
-      - name: Login to Aliyun Registry
-        uses: docker/login-action@v1
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
         with:
-          registry: ${{ secrets.ALIYUN_REGISTRY }}
-          username: ${{ secrets.ALIYUN_DOCKERHUB_USER }}
-          password: ${{ secrets.ALIYUN_DOCKERHUB_PASSWORD }}
-      - name: Sed Config
-        shell: bash
+          aws-region: ${{ secrets.AWS_REGION }}
+          # 如果版本支持参数，不需要手动传凭证
+          
+      # 新增：构建镜像
+      - name: Build Docker Image
         run: |
-          sed  -i 56c"\        && yarn install && yarn build" Makefile
-          make image TAGS_OPT="latest"
-          sed -i 's#./entrypoint.sh"#./entrypoint.sh","actions"#g' deploy/docker/Dockerfile
-          sed -i "s#COPY build/ /usr/share/nginx/html/#COPY . /opt/gva#g" deploy/docker/Dockerfile
-          sed -i 16c"\    && cd /opt/gva/server/ && go mod tidy && cd /opt/gva/web/ && yarn" deploy/docker/Dockerfile
-          sed -i "s#open: true#open: false#g" web/vite.config.js
-          make images TAGS_OPT="latest"
-          docker push registry.cn-hangzhou.aliyuncs.com/gva/gin-vue-admin:latest
-          docker push registry.cn-hangzhou.aliyuncs.com/gva/web:latest
-          docker push registry.cn-hangzhou.aliyuncs.com/gva/server:latest
-          docker push registry.cn-hangzhou.aliyuncs.com/gva/all:latest
+          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
+
+      # 新增：推送到ECR
+      - name: Push to ECR
+        run: |
+          docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}
