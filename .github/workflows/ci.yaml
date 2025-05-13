@@ -44,8 +44,8 @@ jobs:
         working-directory: ./web
 
   backend:
-    if: github.ref == 'refs/heads/stop-stop-stop'
-   # if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
+   # if: github.ref == 'refs/heads/stop-stop-stop'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'release'
     name: Backend go
     runs-on: ubuntu-latest
     strategy:
@@ -265,15 +265,15 @@ jobs:
         run: |
           docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-server .
         working-directory: ./server  
-      - name: Build Web Docker Image 
-        run: |
-          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web .
-        working-directory: ./web  
+    #  - name: Build Web Docker Image 
+    #    run: |
+     #     docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web .
+    #   working-directory: ./web  
 
       # 新增：推送到ECR
       - name: Push Server to ECR
         run: |
           docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-server
-      - name: Push Web to ECR
-        run: |
-          docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web
+    #  - name: Push Web to ECR
+     #   run: |
+     #     docker push ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web
