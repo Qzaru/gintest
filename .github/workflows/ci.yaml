@@ -248,6 +248,8 @@ jobs:
    #   - init
     #  - release-please
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -262,12 +264,12 @@ jobs:
       - name: Build Server Docker Image  
         run: |
           ls -l
-          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-server .
         working-directory: ./server  
       - name: Build Web Docker Image 
         run: |
           ls -l
-          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }} .
+          docker build -t ${{ secrets.ECR_REPO_URI }}:${{ github.sha }}-web .
         working-directory: ./web  
 
       # 新增：推送到ECR
