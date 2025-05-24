@@ -292,7 +292,7 @@ func (Price) TableName() string {
 
 type Inventory struct {
 	ID               int64     `gorm:"primaryKey;comment:在庫ID (手動割当)"`
-	SkuID            string    `gorm:"type:char(36);not null;comment:SKU ID"`
+	SkuID            string    `gorm:"column:sku_id"`
 	LocationID       int       `gorm:"not null;comment:在庫拠点ID"`
 	Quantity         int       `gorm:"not null;default:0;comment:物理在庫数"`
 	ReservedQuantity int       `gorm:"not null;default:0;comment:引当済在庫数"`

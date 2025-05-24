@@ -20,6 +20,10 @@ type ProductsService struct{}
 var ProductsServiceApp = new(ProductsService)
 var productsredis = products.NewProductsRedisStore()
 
+func NewProductsService() *ProductsService {
+	return &ProductsService{}
+}
+
 type Result1 struct {
 	ProductCode     string  `json:"product_code,omitempty"`
 	Name            string  `gorm:"column:products_name"`

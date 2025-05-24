@@ -1506,6 +1506,24 @@ definitions:
         description: 路由切换动画
         type: string
     type: object
+  system.OrderInfo:
+    properties:
+      formatted_total_amount:
+        description: 表示用支払総額
+        type: string
+      order_code:
+        type: string
+      order_id:
+        type: integer
+      order_status:
+        type: string
+      ordered_at_formatted:
+        description: 表示用注文日時
+        type: string
+      total_amount:
+        description: 支払総額 (計算用数値)
+        type: number
+    type: object
   system.ShippingAddressInput:
     properties:
       address_line1:
@@ -2290,6 +2308,151 @@ paths:
       summary: 修改基础api
       tags:
       - SysApi
+  /api/v1/campaigns:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序'1.active', '2.upcoming', '3.all'
+        in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取促销活动
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取促销活动
+      tags:
+      - Products
+  /api/v1/campaigns/{campaign_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序'1.price_asc'(関連度順), '2.newest'(価格安い順)
+        in: query
+        name: sort
+        type: integer
+      - description: 搜索关键词
+        in: path
+        name: campaign_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取促销活动详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取促销活动详情
+      tags:
+      - Products
+  /api/v1/categories/{category_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 目录id
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取目录详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取目录详情
+      tags:
+      - Products
+  /api/v1/categories/tree:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 3
+        description: 查询深度,默认3
+        in: query
+        name: max_depth
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取目录树
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取目录树
+      tags:
+      - Products
   /api/v1/payments/methods:
     get:
       consumes:
@@ -2540,6 +2703,52 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 查看商品图片信息
+      tags:
+      - Products
+  /api/v1/products/search:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: 排序'1.relevance'(関連度順), '2.price_asc'(価格安い順), '3.price_desc'(価格高い順),
+          '4.newest'(新着順)。
+        in: query
+        name: sort
+        type: integer
+      - description: 搜索关键词
+        in: query
+        name: keyword
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 搜索商品
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 搜索商品
       tags:
       - Products
   /api/v2/cart:
@@ -2829,6 +3038,99 @@ paths:
       summary: 添加商品浏览记录
       tags:
       - Products
+  /api/v2/orders:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 1
+        description: 查看第几页,默认1
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页显示几条，默认10
+        in: query
+        name: limit
+        type: integer
+      - default: 6
+        description: 订单状态1.pending_payment 2.delivered 3.shipped 4.processing 5.cancelled
+          6.all 默认1
+        in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取已下单信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取已下单信息
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 在订单中完成支付
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.OrderInfo'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 在订单中完成支付
+      tags:
+      - Products
+  /api/v2/orders/{order_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 订单id
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取已下单信息的详情
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取已下单信息的详情
+      tags:
+      - Products
   /api/v2/orders/checkout/apply-coupon:
     delete:
       consumes:
@@ -2922,7 +3224,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/system.ApplyCouponRequest'
+          $ref: '#/definitions/system.UsePointsRequest'
       produces:
       - application/json
       responses:

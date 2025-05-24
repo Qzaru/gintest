@@ -33,6 +33,10 @@ func main() {
 	global.GVA_LOG = core.Zap() // 初始化zap日志库
 	zap.ReplaceGlobals(global.GVA_LOG)
 	global.GVA_DB = initialize.Gorm() // gorm连接数据库
+	//初始化elasticsearch服务,新加的
+	// global.GVA_ElasticSearch = initialize.InitElasticSearch()
+	// ImportDataToES(global.GVA_DB, global.GVA_ElasticSearch) //将数据库内容导入到es
+
 	initialize.Timer()
 	initialize.DBList()
 	if global.GVA_DB != nil {
@@ -43,3 +47,40 @@ func main() {
 	}
 	core.RunWindowsServer()
 }
+
+// func ImportDataToES(db *gorm.DB, es *elasticsearch.Client) error {
+// 	var products []system.Products // 前提：`Product`是MySQL对应的模型
+// 	if err := db.Find(&products).Error; err != nil {
+// 		return err
+// 	}
+
+// 	bulkBuffer := bytes.Buffer{}
+
+// 	for _, p := range products {
+// 		meta := []byte(fmt.Sprintf(`{ "index" : { "_index" : "products", "_id" : "%d" } }%s`, p.ID, "\n"))
+// 		data, err := json.Marshal(p)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		data = append(data, "\n"...)
+
+// 		bulkBuffer.Write(meta)
+// 		bulkBuffer.Write(data)
+// 	}
+
+// 	// 批量导入
+// 	res, err := es.Bulk(bytes.NewReader(bulkBuffer.Bytes()), es.Bulk.WithRefresh("true"))
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer res.Body.Close()
+
+// 	// 解析响应（可选，查看是否成功）
+// 	var bulkRes map[string]interface{}
+// 	if err := json.NewDecoder(res.Body).Decode(&bulkRes); err != nil {
+// 		return err
+// 	}
+// 	// 你可以在这里检测errors字段
+
+// 	return nil
+// }

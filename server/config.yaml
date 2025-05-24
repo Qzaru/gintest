@@ -134,7 +134,8 @@ mysql:
     db-name: gva
     username: root
     password: Korehahido1
-    path: 127.0.0.1
+    # path: 127.0.0.1
+    path: 192.168.0.110
     engine: ""
     log-mode: info
     max-idle-conns: 10
@@ -179,7 +180,8 @@ qiniu:
     use-cdn-domains: false
 redis:
     name: ""
-    addr: 127.0.0.1:6379
+    # addr: 127.0.0.1:6379
+    addr: 192.168.0.110:6379
     password: ""
     db: 0
     useCluster: false
@@ -189,7 +191,8 @@ redis:
         - 172.21.0.2:7002
 redis-list:
     - name: cache
-      addr: 127.0.0.1:6379
+      # addr: 127.0.0.1:6379
+      addr: 192.168.0.110:6379
       password: ""
       db: 0
       useCluster: false

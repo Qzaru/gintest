@@ -380,7 +380,36 @@ func (productsService *ProductsService) GetPaymentMethods() (paymentMethodInfo [
 // @author: [granty1](https://github.com/granty1)
 // @description: 查看配送地址
 // @return: cartResponse,err
-func (productsService *ProductsService) GetCheckoutInfo(userID uint) (checkoutInfoResponseV1_1 system.CheckoutInfoResponseV1_1, err error) {
+func (productsService *ProductsService) GetCheckoutInfo(userID uint, onlyget bool) (checkoutInfoResponseV1_1 system.CheckoutInfoResponseV1_1, err error) {
+	//购物车中的商品们视为准备购买的商品，小计存入到checkoutsession，没有就创建，有就更新小计
+	//当onlyget为false时，跑以下代码，从购物车生成session；true时跳过，直接到后面代码
+	if !onlyget {
+		cart, err := productsService.GetCart(userID)
+		var findsession system.CheckoutSession
+		err = global.GVA_DB.Table("checkout_sessions").
+			Where("user_id = ?", userID).
+			First(&findsession).Error
+		if err == gorm.ErrRecordNotFound {
+			err = global.GVA_DB.Create(&system.CheckoutSession{
+				UserID:       userID,
+				CartSubtotal: cart.TotalAmount,
+				ShippingFee:  550.00,
+				TotalAmount:  cart.TotalAmount,
+			}).Error
+		} else if err == nil {
+			updates := map[string]interface{}{
+				"cart_subtotal":          cart.TotalAmount,
+				"applied_coupon_id":      nil,
+				"coupon_discount_amount": 0,
+				"used_points":            0,
+				"points_discount_amount": 0,
+				"shipping_fee":           550.00,
+				"total_amount":           cart.TotalAmount + 550.00,
+			}
+			err = global.GVA_DB.Model(&findsession).Where("user_id = ?", userID).Updates(updates).Error
+		}
+	}
+	//以下是正常的checkoutsession中已有数据时，对数据进行抓取处理
 	type ResultsCheckout struct {
 		//AvailableCoupons []AvailableCouponInfo `json:"available_coupons"`        // 利用可能なクーポンリスト
 		CouponID      uint64  `json:"coupon_id"`
@@ -435,33 +464,35 @@ func (productsService *ProductsService) GetCheckoutInfo(userID uint) (checkoutIn
 		Where(`coupons.min_purchase_amount IS NULL or coupons.min_purchase_amount <= checkout_sessions.cart_subtotal`).
 		Find(&resultsCheckout1).Error
 	availableCouponInfo := []system.AvailableCouponInfo{}
-	for _, k := range resultsCheckout1 {
-		switch {
-		case k.DiscountType == "percentage" && k.DiscountMax != "":
-			str1 := strings.TrimSuffix(k.DiscountValue, ".00")
-			str2 := strings.TrimSuffix(k.DiscountMax, ".00")
-			k.DiscountText = str1 + "% OFF (最大" + str2 + "円引)"
-		case k.DiscountType == "percentage" && k.DiscountMax == "":
-			str1 := strings.TrimSuffix(k.DiscountValue, ".00")
-			k.DiscountText = str1 + "% OFF"
-		case k.DiscountType == "fixed":
-			str1 := strings.TrimSuffix(k.DiscountValue, ".00")
-			k.DiscountText = str1 + "円引き"
+	if len(resultsCheckout1) > 0 {
+		for _, k := range resultsCheckout1 {
+			switch {
+			case k.DiscountType == "percentage" && k.DiscountMax != "":
+				str1 := strings.TrimSuffix(k.DiscountValue, ".00")
+				str2 := strings.TrimSuffix(k.DiscountMax, ".00")
+				k.DiscountText = str1 + "% OFF (最大" + str2 + "円引)"
+			case k.DiscountType == "percentage" && k.DiscountMax == "":
+				str1 := strings.TrimSuffix(k.DiscountValue, ".00")
+				k.DiscountText = str1 + "% OFF"
+			case k.DiscountType == "fixed":
+				str1 := strings.TrimSuffix(k.DiscountValue, ".00")
+				k.DiscountText = str1 + "円引き"
+			}
+			availableCouponInfo = append(availableCouponInfo, system.AvailableCouponInfo{
+				CouponID:     k.CouponID,
+				CouponCode:   k.CouponCode,
+				Name:         k.Name,
+				Description:  k.Description,
+				DiscountText: k.DiscountText,
+			})
 		}
-		availableCouponInfo = append(availableCouponInfo, system.AvailableCouponInfo{
-			CouponID:     k.CouponID,
-			CouponCode:   k.CouponCode,
-			Name:         k.Name,
-			Description:  k.Description,
-			DiscountText: k.DiscountText,
-		})
+	}
 
-	}
-	userPointInfo := system.UserPointInfo{
-		AvailablePoints: resultsCheckout1[0].AvailablePoints,
-	}
+	// userPointInfo := system.UserPointInfo{
+	// 	AvailablePoints: resultsCheckout1[0].AvailablePoints,
+	// }
 	err = global.GVA_DB.Table("checkout_sessions").
-		Select(`checkout_sessions.cart_subtotal as cart_subtotal_formatted,
+		Select(`checkout_sessions.cart_subtotal as cart_subtotal_amount_formatted,
 				coupons.id as acoupon_id,
 				coupons.coupon_code as acoupon_code,
 				coupons.name as aname,
@@ -472,12 +503,18 @@ func (productsService *ProductsService) GetCheckoutInfo(userID uint) (checkoutIn
 				checkout_sessions.used_points as used_points,
 				checkout_sessions.points_discount_amount as points_discount_amount_formatted,
 				checkout_sessions.shipping_fee as shipping_fee_formatted,
-				checkout_sessions.total_amount as total_amount_formatted`).
+				checkout_sessions.total_amount as total_amount_formatted,
+				user_points.available_points as available_points`).
 		Joins("left join coupons on coupons.id=checkout_sessions.applied_coupon_id").
+		Joins("join user_points on user_points.user_id = checkout_sessions.user_id").
 		Where("checkout_sessions.user_id = ?", userID).
 		Order("checkout_sessions.user_id ASC").
 		Limit(1).
 		Find(&resultsCheckout2).Error
+
+	userPointInfo := system.UserPointInfo{
+		AvailablePoints: resultsCheckout2.AvailablePoints,
+	}
 	x, _ := strconv.ParseFloat(resultsCheckout2.CartSubtotalAmountFormatted, 64) //小计的数字类型
 	// y, _ := strconv.ParseFloat(resultsCheckout2.ADiscountValue, 64)              //折扣值的数字类型
 	// z, _ := strconv.ParseFloat(resultsCheckout2.ADiscountMax, 64)                //折扣上限的数字类型
@@ -509,7 +546,7 @@ func (productsService *ProductsService) GetCheckoutInfo(userID uint) (checkoutIn
 	//这里似乎不需要手动计算，只需要查询checkoutsession的数据即可
 	appliedCouponInfo := system.AppliedCouponInfo{
 		CouponID:                resultsCheckout2.AcouponID,
-		CouponCode:              resultsCheckout2.CouponCode,
+		CouponCode:              resultsCheckout2.AcouponCode,
 		Name:                    resultsCheckout2.Aname,
 		DiscountAmount:          resultsCheckout2.DiscountAmount,
 		FormattedDiscountAmount: resultsCheckout2.FormattedDiscountAmount,
@@ -548,11 +585,13 @@ func (productsService *ProductsService) SetCoupon(couponCode string, userID uint
 		DiscountValue           string  `json:"discount_value"`
 		MaxDiscountAmount       string  `json:"max_discount_amount"`
 		CartSubtotal            string  `json:"cart_subtotal"`
+		TotalAmount             string  `json:"total_amount"`
 	}
 	var appliedCouponResult []AppliedCouponResult
 	err = global.GVA_DB.Table("user_coupons").
 		Select(`coupons.id as coupon_id,
             checkout_sessions.cart_subtotal,
+            checkout_sessions.total_amount,
             coupons.discount_type,
             coupons.discount_value,
             coupons.max_discount_amount`).
@@ -569,7 +608,7 @@ func (productsService *ProductsService) SetCoupon(couponCode string, userID uint
 	if err == nil && len(appliedCouponResult) != 0 {
 		//使用时要准确计算出折扣值（不可超过自身限制、小计上限等）
 
-		x, _ := strconv.ParseFloat(a.CartSubtotal, 64)      //小计的数字类型
+		x, _ := strconv.ParseFloat(a.TotalAmount, 64)       //原本结算金额的数字类型
 		y, _ := strconv.ParseFloat(a.DiscountValue, 64)     //折扣值的数字类型
 		z, _ := strconv.ParseFloat(a.MaxDiscountAmount, 64) //折扣上限的数字类型
 		//计算折扣和需要被更新的最终价格
@@ -590,14 +629,14 @@ func (productsService *ProductsService) SetCoupon(couponCode string, userID uint
 		}
 		//update checkoutsession的字段
 		var oldsession system.CheckoutSession
-		var userCoupon system.UserCoupon
+		// var userCoupon system.UserCoupon
 		//更新优惠券id 折扣额 和最终价格
 		err = global.GVA_DB.Model(&oldsession).Where("user_id = ?", userID).Updates(system.CheckoutSession{AppliedCouponID: &a.CouponID, CouponDiscountAmount: a.DiscountAmount, TotalAmount: total_amount}).Error
 		//还需要在usercoupon里更新优惠券已使用
-		t := time.Now()
-		err = global.GVA_DB.Model(&userCoupon).Where("user_id = ? AND coupon_id= ?", userID, a.CouponID).Updates(system.UserCoupon{IsUsed: true, UsedAt: &t}).Error
+		// t := time.Now()
+		// err = global.GVA_DB.Model(&userCoupon).Where("user_id = ? AND coupon_id= ?", userID, a.CouponID).Updates(system.UserCoupon{IsUsed: true, UsedAt: &t}).Error
 		//用另一个api抓取购物车信息然后返回
-		getCheckoutInfo, err := productsService.GetCheckoutInfo(userID)
+		getCheckoutInfo, err := productsService.GetCheckoutInfo(userID, true)
 		return getCheckoutInfo, err
 	} else {
 		return system.CheckoutInfoResponseV1_1{}, err
@@ -630,14 +669,14 @@ func (productsService *ProductsService) DeleteCoupon(couponCode string, userID u
 	}
 	err = global.GVA_DB.Model(&oldsession).Where("user_id = ?", userID).Updates(updates).Error
 	//用另一个api抓取购物车信息然后返回
-	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID)
+	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID, true)
 	//将用户的优惠券恢复为未使用
-	var userCoupon system.UserCoupon
-	updates2 := map[string]interface{}{
-		"is_used": 0,
-		"used_at": nil,
-	}
-	err = global.GVA_DB.Model(&userCoupon).Where("user_id = ? AND coupon_id = ?", userID, checkoutSession.AppliedCouponID).Updates(updates2).Error
+	// var userCoupon system.UserCoupon
+	// updates2 := map[string]interface{}{
+	// 	"is_used": 0,
+	// 	"used_at": nil,
+	// }
+	// err = global.GVA_DB.Model(&userCoupon).Where("user_id = ? AND coupon_id = ?", userID, checkoutSession.AppliedCouponID).Updates(updates2).Error
 	return getCheckoutInfo, err
 }
 
@@ -696,7 +735,7 @@ func (productsService *ProductsService) UsePoints(pointsToUse int, userID uint) 
 	//还需要在userpoints里更新积分已使用
 	err = global.GVA_DB.Model(&userPoints).Where("user_id = ?", userID).Update("AvailablePoints", checkoutSession.AvailablePoints-pointsToUse).Error
 	//用另一个api抓取购物车信息然后返回
-	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID)
+	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID, true)
 	return getCheckoutInfo, err
 }
 
@@ -749,6 +788,6 @@ func (productsService *ProductsService) UnUsePoints(pointsToUnUse int, userID ui
 	//还需要在userpoints里更新积分已使用
 	err = global.GVA_DB.Model(&userPoints).Where("user_id = ?", userID).Update("AvailablePoints", checkoutSession.AvailablePoints+pointsToUnUse).Error
 	//用另一个api抓取购物车信息然后返回
-	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID)
+	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID, true)
 	return getCheckoutInfo, err
 }

@@ -11,6 +11,7 @@ import (
 	systemReq "github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
+
 	"go.uber.org/zap"
 )
 
@@ -690,7 +691,7 @@ func (s *ProductsApi) GetCheckoutInfo(c *gin.Context) {
 	//测试用
 	fmt.Println("提取到的用户id是", userID)
 	//totalAmount:=cr.TotalAmount
-	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID)
+	getCheckoutInfo, err := productsService.GetCheckoutInfo(userID, false)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
@@ -779,7 +780,7 @@ func (s *ProductsApi) UsePoints(c *gin.Context) {
 // @Security  ApiKeyAuth
 // @accept    application/json
 // @Produce   application/json
-// @Param     data  body  system.ApplyCouponRequest  true  "在订单中取消使用积分"
+// @Param     data  body  system.UsePointsRequest  true  "在订单中取消使用积分"
 // @Success   200   {object} response.Response{data=system.ShippingAddressInput,msg=string} "在订单中取消使用积分"
 // @Router    /api/v2/orders/checkout/use-points [delete]
 func (s *ProductsApi) UnUsePoints(c *gin.Context) {
@@ -797,4 +798,230 @@ func (s *ProductsApi) UnUsePoints(c *gin.Context) {
 		return
 	}
 	response.OkWithDetailed(unUsePoints, "撤销积分成功", c)
+}
+
+// @Tags      Products
+// @Summary   在订单中完成支付
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Success   200   {object} response.Response{data=system.OrderInfo,msg=string} "在订单中完成支付"
+// @Router    /api/v2/orders [post]
+func (s *ProductsApi) OrderPay(c *gin.Context) {
+	// var cor system.CreateOrderRequest
+	// err := c.ShouldBindJSON(&cor)
+	// if err != nil {
+	// 	response.FailWithMessage(err.Error(), c)
+	// 	return
+	// }
+	userID := utils.GetUserID(c)
+	orderPay, err := productsService.OrderPay(userID)
+	if err != nil {
+		global.GVA_LOG.Error("支付未完成!", zap.Error(err))
+		response.FailWithMessage("支付未完成"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(orderPay, "支付成功", c)
+}
+
+// GetOrders
+// @Tags      Products
+// @Summary   获取已下单信息
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取已下单信息
+// @param page  query  int false   "查看第几页,默认1" default(1)
+// @param limit  query  int false   "每页显示几条，默认10" default(10)
+// @param status  query  int false   "订单状态1.pending_payment 2.delivered 3.shipped 4.processing 5.cancelled 6.all 默认1" default(6)
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取已下单信息"
+// @Router    /api/v2/orders [get]
+func (s *ProductsApi) GetOrders(c *gin.Context) {
+	var req systemReq.UserFavorites
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	userID := utils.GetUserID(c)
+	//测试用
+	fmt.Println("提取到的用户id是", userID)
+	//totalAmount:=cr.TotalAmount
+	getOrders, err := productsService.GetOrders(userID, req.Page, req.Limit, req.Status)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getOrders": getOrders}, "OK", c)
+}
+
+// GetOrderDetail
+// @Tags      Products
+// @Summary   获取已下单信息的详情
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取已下单信息的详情
+// @param order_id path  int true "订单id"
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取已下单信息的详情"
+// @Router    /api/v2/orders/{order_id} [get]
+func (s *ProductsApi) GetOrderDetail(c *gin.Context) {
+	// var req systemReq.UserFavorites
+	// err := c.ShouldBindJSON(&req)
+	// if err != nil {
+	// 	response.FailWithMessage(err.Error(), c)
+	// 	return
+	// }
+	order_id := c.Param("order_id")
+	order_idstr, _ := strconv.ParseUint(order_id, 10, 64)
+	userID := utils.GetUserID(c)
+	//测试用
+	fmt.Println("提取到的用户id是", userID)
+	//totalAmount:=cr.TotalAmount
+	getOrderDetail, err := productsService.GetOrderDetail(userID, order_idstr)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getOrderDetail": getOrderDetail}, "OK", c)
+}
+
+// Search
+// @Tags      Products
+// @Summary   搜索商品
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 搜索商品
+// @param page  query  int false   "查看第几页,默认1" default(1)
+// @param limit  query  int false   "每页显示几条，默认10" default(10)
+// @param sort  query  int false   "排序'1.relevance'(関連度順), '2.price_asc'(価格安い順), '3.price_desc'(価格高い順), '4.newest'(新着順)。" default(1)
+// @param keyword  query  string true   "搜索关键词"
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "搜索商品"
+// @Router    /api/v1/products/search [get]
+func (s *ProductsApi) Search(c *gin.Context) {
+	var req systemReq.UserFavorites
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	//userID := utils.GetUserID(c)
+	//测试用
+	//fmt.Println("提取到的用户id是", userID)
+	//totalAmount:=cr.TotalAmount
+	search, err := productsService.Search(req.Keyword, req.Page, req.Limit, req.Sort)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"search": search}, "OK", c)
+}
+
+// GetCategoryTree
+// @Tags      Products
+// @Summary   获取目录树
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取目录树
+// @param max_depth  query  int false   "查询深度,默认3" default(3)
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取目录树"
+// @Router    /api/v1/categories/tree [get]
+func (s *ProductsApi) GetCategoryTree(c *gin.Context) {
+	var req systemReq.UserFavorites
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	getCategoryTree, err := productsService.GetCategoryTree(req.MaxDepth)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getCategoryTree": getCategoryTree}, "OK", c)
+}
+
+// GetCategoryDetails
+// @Tags      Products
+// @Summary   获取目录详情
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取目录详情
+// @param category_id path  string true "目录id"
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取目录详情"
+// @Router    /api/v1/categories/{category_id} [get]
+func (s *ProductsApi) GetCategoryDetails(c *gin.Context) {
+	category_id := c.Param("category_id")
+	getCategoryDetails, err := productsService.GetCategoryDetails(category_id)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getCategoryDetails": getCategoryDetails}, "OK", c)
+}
+
+// GetCampaigns
+// @Tags      Products
+// @Summary   获取促销活动
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取促销活动
+// @param page  query  int false   "查看第几页,默认1" default(1)
+// @param limit  query  int false   "每页显示几条，默认10" default(10)
+// @param status  query  int false   "排序'1.active', '2.upcoming', '3.all'" default(1)
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取促销活动"
+// @Router    /api/v1/campaigns [get]
+func (s *ProductsApi) GetCampaigns(c *gin.Context) {
+	var req systemReq.UserFavorites
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	getCampaigns, err := productsService.GetCampaigns(req.Page, req.Limit, req.Status)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getCampaigns": getCampaigns}, "OK", c)
+}
+
+// GetCampaignDetail
+// @Tags      Products
+// @Summary   获取促销活动详情
+// @Security  ApiKeyAuth
+// @accept    application/json
+// @Produce   application/json
+// @Description: 获取促销活动详情
+// @param page  query  int false   "查看第几页,默认1" default(1)
+// @param limit  query  int false   "每页显示几条，默认10" default(10)
+// @param sort  query  int false   "排序'1.price_asc'(関連度順), '2.newest'(価格安い順)" default(1)
+// @param campaign_id  path  string true   "搜索关键词"
+// @Success   200   {object}  response.Response{data=map[string]interface{},msg=string}  "获取促销活动详情"
+// @Router    /api/v1/campaigns/{campaign_id} [get]
+func (s *ProductsApi) GetCampaignDetail(c *gin.Context) {
+	var req systemReq.UserFavorites
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	campaign_id := c.Param("campaign_id")
+	getCampaignDetail, err := productsService.GetCampaignDetail(campaign_id, req.Page, req.Limit, req.Sort)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithDetailed2(response.ERRORNOTFOUND, response.ERRORMESSAGE_NOTFOUND, response.ERRORCODE_NOT_FOUND, c)
+		return
+	}
+	response.OkWithDetailed2(gin.H{"getCampaignDetail": getCampaignDetail}, "OK", c)
 }

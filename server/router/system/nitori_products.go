@@ -16,6 +16,11 @@ func (s *ProductsRouter) InitProductsRouterPublic(Router *gin.RouterGroup) {
 		productsRouterPublic.GET("/products/:product_code/related", productsApi.GetRelateProducts)
 		productsRouterPublic.GET("/products/:product_code/coordinates", productsApi.GetCoordinateSet)
 		productsRouterPublic.GET("/payments/methods", productsApi.GetPaymentMethods)
+		productsRouterPublic.GET("/products/search", productsApi.Search)
+		productsRouterPublic.GET("/categories/tree", productsApi.GetCategoryTree)
+		productsRouterPublic.GET("/categories/:category_id", productsApi.GetCategoryDetails)
+		productsRouterPublic.GET("/campaigns", productsApi.GetCampaigns)
+		productsRouterPublic.GET("/campaigns/:campaign_id", productsApi.GetCampaignDetail)
 
 	}
 
@@ -41,5 +46,8 @@ func (s *ProductsRouter) InitProductsRouterPrivate(Router *gin.RouterGroup) {
 		productsRouterPrivate.DELETE("/orders/checkout/apply-coupon", productsApi.DeleteCoupon)
 		productsRouterPrivate.POST("/orders/checkout/use-points", productsApi.UsePoints)
 		productsRouterPrivate.DELETE("/orders/checkout/use-points", productsApi.UnUsePoints)
+		productsRouterPrivate.POST("/orders", productsApi.OrderPay)
+		productsRouterPrivate.GET("/orders", productsApi.GetOrders)
+		productsRouterPrivate.GET("/orders/:order_id", productsApi.GetOrderDetail)
 	}
 }

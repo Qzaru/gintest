@@ -171,6 +171,11 @@ func (i *initCasbin) InitializeData(ctx context.Context) (context.Context, error
 		{Ptype: "p", V0: "888", V1: "/api/v2/shipping-addresses", V2: "POST"},
 		{Ptype: "p", V0: "888", V1: "/api/v2/shipping-addresses/:address_id", V2: "PUT"},
 		{Ptype: "p", V0: "888", V1: "/api/v2/shipping-addresses/:address_id", V2: "DELETE"},
+		{Ptype: "p", V0: "888", V1: "/api/v1/products/search", V2: "GET"},
+		{Ptype: "p", V0: "888", V1: "/api/v1/categories/tree", V2: "GET"},
+		{Ptype: "p", V0: "888", V1: "/api/v1/categories/:category_id", V2: "GET"},
+		{Ptype: "p", V0: "888", V1: "/api/v1/campaigns", V2: "GET"},
+		{Ptype: "p", V0: "888", V1: "/api/v1/campaigns/:campaign_id", V2: "GET"},
 
 		{Ptype: "p", V0: "888", V1: "/api/v1/payments/methods", V2: "GET"},
 		{Ptype: "p", V0: "888", V1: "/api/v2/orders/checkout/info", V2: "GET"},
@@ -178,6 +183,9 @@ func (i *initCasbin) InitializeData(ctx context.Context) (context.Context, error
 		{Ptype: "p", V0: "888", V1: "/api/v2/orders/checkout/apply-coupon", V2: "DELETE"},
 		{Ptype: "p", V0: "888", V1: "/api/v2/orders/checkout/use-points", V2: "POST"},
 		{Ptype: "p", V0: "888", V1: "/api/v2/orders/checkout/use-points", V2: "DELETE"},
+		{Ptype: "p", V0: "888", V1: "/api/v2/orders", V2: "POST"},
+		{Ptype: "p", V0: "888", V1: "/api/v2/orders", V2: "GET"},
+		{Ptype: "p", V0: "888", V1: "/api/v2/orders/:order_id", V2: "GET"},
 
 		{Ptype: "p", V0: "888", V1: "/email/emailTest", V2: "POST"},
 		{Ptype: "p", V0: "888", V1: "/email/sendEmail", V2: "POST"},

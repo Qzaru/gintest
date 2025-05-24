@@ -71,10 +71,15 @@ type GetUserList struct {
 
 // 新加的，收藏功能用(被用于各种api的数据绑定)
 type UserFavorites struct {
-	UserID   uint   `json:"userID" form:"userID"`
-	SkuId    string `json:"sku_id" form:"sku_id"`
-	Page     int    `json:"page" form:"page"`
-	Limit    int    `json:"limit" form:"limit"`
-	Sort     int    `json:"sort" form:"sort"`
-	Quantity int    `json:"quantity" form:"quantity"`
+	UserID     uint   `json:"userID" form:"userID"`
+	SkuId      string `json:"sku_id" form:"sku_id"`
+	Page       int    `json:"page" form:"page"`
+	Limit      int    `json:"limit" form:"limit"`
+	Sort       int    `json:"sort" form:"sort"`
+	Quantity   int    `json:"quantity" form:"quantity"`
+	Status     int    `json:"status" form:"status"`
+	OrderId    uint64 `json:"order_id" form:"order_id"`
+	Keyword    string `json:"keyword" form:"keyword"`
+	MaxDepth   int    `json:"max_depth" form:"max_depth"`
+	CategoryId string `json:"category_id" form:"category_id"`
 }

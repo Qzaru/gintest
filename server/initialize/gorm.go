@@ -56,7 +56,7 @@ func RegisterTables() {
 		system.Condition{},
 		system.JoinTemplate{},
 		system.SysParams{},
-		system.UserLogin{},
+		//system.UserLogin{},
 		// system.Products{},
 		// system.ProductSkus{},
 		// system.SKUAvailability{},

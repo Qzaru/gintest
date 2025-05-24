@@ -22,9 +22,11 @@ import (
 )
 
 var (
-	GVA_DB        *gorm.DB
-	GVA_DBList    map[string]*gorm.DB
-	GVA_REDIS     redis.UniversalClient
+	GVA_DB     *gorm.DB
+	GVA_DBList map[string]*gorm.DB
+	GVA_REDIS  redis.UniversalClient
+	//加一个elasticsearch的全局变量
+	//GVA_ElasticSearch *elasticsearch.Client
 	GVA_REDISList map[string]redis.UniversalClient
 	GVA_MONGO     *qmgo.QmgoClient
 	GVA_CONFIG    config.Server

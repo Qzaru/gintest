@@ -8,83 +8,92 @@ networks:
       config:
         - subnet: '177.7.0.0/16'
         
-# 设置mysql，redis持久化保存
-volumes:
-  mysql:
-  redis:
+# 设置mysql，redis持久化保存   注释掉了，因为我想用本地的
+#volumes:
+#  mysql:
+#  redis:
   
 services:
   web:
-    build:
-      context: ../../web
-      dockerfile: ./Dockerfile
+    #build:
+    #  context: ../../web
+    #  dockerfile: ./Dockerfile
+    image: node:alpine #注释掉build后指定了依赖
     container_name: gva-web
     restart: always
     ports:
       - '8080:8080'
-    depends_on:
-      - server
-    command: [ 'nginx-debug', '-g', 'daemon off;' ]
+    volumes:
+    #  - /mnt/c/gogogo/myplace/gin-vue-admin/web:/usr/share/nginx/html:ro #后面是Nginx的默认静态资源目录（挂载镜像时使用）
+      - /mnt/c/gogogo/myplace/gin-vue-admin/web:/app/web
+    #depends_on:
+    #  - server
+    #command: [ 'nginx-debug', '-g', 'daemon off;' ]  #原本的command适用于跑打包好的镜像
+    command: ["npm", "run", "serve"]
     networks:
       network:
         ipv4_address: 177.7.0.11
 
   server:
-    build:
-      context: ../../server
-      dockerfile: ./Dockerfile
+    #build:
+    #  context: ../../server
+    #  dockerfile: ./Dockerfile
+    image: golang:alpine
     container_name: gva-server
     restart: always
     ports:
       - '8888:8888'
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    links:
-      - mysql
-      - redis
+    volumes:
+    - /mnt/c/gogogo/myplace/gin-vue-admin/server:/app/server   # 挂载源码目录
+    command: sh -c "go run ."
+    #depends_on:
+    #  mysql:
+    #    condition: service_healthy
+    #  redis:
+    #    condition: service_healthy
+    #links:
+    #  - mysql
+    #  - redis
     networks:
       network:
         ipv4_address: 177.7.0.12
 
-  mysql:
-    image: mysql:8.0.21       # 如果您是 arm64 架构：如 MacOS 的 M1，请修改镜像为 image: mysql/mysql-server:8.0.21
-    container_name: gva-mysql
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci #设置utf8字符集
-    restart: always
-    ports:
-      - "13306:3306"  # host物理直接映射端口为13306
-    environment:
-      #MYSQL_ROOT_PASSWORD: 'Aa@6447985' # root管理员用户密码
-      MYSQL_DATABASE: 'qmPlus' # 初始化启动时要创建的数据库的名称
-      MYSQL_USER: 'gva'
-      MYSQL_PASSWORD: 'Aa@6447985'
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gva", "-pAa@6447985"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    volumes:
-      - mysql:/var/lib/mysql
-    networks:
-      network:
-        ipv4_address: 177.7.0.13
+  #mysql:
+  #  image: mysql:8.0.21       # 如果您是 arm64 架构：如 MacOS 的 M1，请修改镜像为 image: mysql/mysql-server:8.0.21
+  #  container_name: gva-mysql
+  #  command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci #设置utf8字符集
+  #  restart: always
+  #  ports:
+  #    - "13306:3306"  # host物理直接映射端口为13306
+  #  environment:
+  #    #MYSQL_ROOT_PASSWORD: 'Aa@6447985' # root管理员用户密码
+  #    MYSQL_DATABASE: 'qmPlus' # 初始化启动时要创建的数据库的名称
+  #    MYSQL_USER: 'gva'
+  #    MYSQL_PASSWORD: 'Aa@6447985'
+  #  healthcheck:
+  #    test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gva", "-pAa@6447985"]
+  #    interval: 10s
+  #    timeout: 5s
+  #    retries: 3
+  #  volumes:
+  #    - mysql:/var/lib/mysql
+  #  networks:
+  #    network:
+  #      ipv4_address: 177.7.0.13
 
-  redis:
-    image: redis:6.0.6
-    container_name: gva-redis # 容器名
-    restart: always
-    ports:
-      - '16379:6379'
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    volumes:
-      - redis:/data
-    networks:
-      network:
-        ipv4_address: 177.7.0.14
+  #redis:
+  #  image: redis:6.0.6
+  #  container_name: gva-redis # 容器名
+  #  restart: always
+  #  ports:
+  #    - '16379:6379'
+  #  healthcheck:
+  #    test: ["CMD-SHELL", "redis-cli ping | grep PONG || exit 1"]
+  #    interval: 10s
+  #    timeout: 5s
+  #    retries: 3
+  #  volumes:
+  #    - redis:/data
+  #  networks:
+  #    network:
+  #      ipv4_address: 177.7.0.14
